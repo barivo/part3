@@ -1,6 +1,8 @@
 const express = require("express");
+const cors = require("cors");
 const morgan = require("morgan");
 const app = express();
+const PORT = 3001;
 var persons = require("./db.json");
 
 const unknownEndpoint = (request, response) => {
@@ -12,6 +14,7 @@ morgan.token("body", function(req, res) {
 });
 
 app.use(express.json());
+app.use(cors());
 app.use(morgan(":method :url :status :response-time ms  RESPONSE-BODY: :body"));
 
 app.get("favicon.ico", (req, res) => {
@@ -62,6 +65,29 @@ app.post("/api/persons", (req, res) => {
   }
 });
 
+app.put("/api/persons/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const body = req.body;
+  if (!persons.some(person => person.id === id)) {
+    return res.status(400).json({ error: "id not found" });
+  } else if (
+    typeof body.name === "undefined" ||
+    typeof body.number === "undefined" ||
+    body.name.length < 2 ||
+    body.number.length < 2
+  ) {
+    return res.status(400).json({ error: "must inlcude name and number" });
+  } else {
+    const person = {
+      id: id,
+      name: body.name,
+      number: body.number
+    };
+    persons = persons.concat(person);
+    res.json(person);
+  }
+});
+
 app.delete("/api/persons/:id", (req, res) => {
   const id = Number(req.params.id);
   persons = persons.filter(person => person.id !== id);
@@ -71,4 +97,4 @@ app.delete("/api/persons/:id", (req, res) => {
 
 app.use(unknownEndpoint);
 
-app.listen(3000);
+app.listen(PORT);
