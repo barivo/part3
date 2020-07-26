@@ -16,10 +16,6 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan(":method :url :status :response-time ms  RESPONSE-BODY: :body"));
 
-app.get("favicon.ico", (req, res) => {
-  res.sendStatus(404);
-});
-
 app.get("/info", (req, res) => {
   const date = new Date().toString();
   res.send(`Phonebook has info for ${persons.length} people <br/><br/>${date}`);
