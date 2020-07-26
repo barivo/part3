@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const morgan = require("morgan");
 const app = express();
 var persons = require("./db.json");
 
@@ -8,13 +7,8 @@ const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: "unknown endpoint" });
 };
 
-morgan.token("body", function(req, res) {
-  return JSON.stringify(req.body);
-});
-
 app.use(express.json());
 app.use(cors());
-app.use(morgan(":method :url :status :response-time ms  RESPONSE-BODY: :body"));
 
 app.get("/info", (req, res) => {
   const date = new Date().toString();
