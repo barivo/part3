@@ -10,7 +10,7 @@ const unknownEndpoint = (request, response) => {
 app.use(express.json());
 app.use(cors());
 
-app.get("/info", (req, res) => {
+app.get("/", (req, res) => {
   const date = new Date().toString();
   res.send(`Phonebook has info for ${persons.length} people <br/><br/>${date}`);
 });
