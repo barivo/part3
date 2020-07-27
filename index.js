@@ -1,7 +1,13 @@
+require("dotenv").config();
+const Person = require("./models/people");
 const express = require("express");
 const cors = require("cors");
 const app = express();
-var persons = require("./db.json");
+const mongoose = require("mongoose");
+const { response } = require("express");
+var persons = [];
+
+// var persons = require("./db.json");
 
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: "unknown endpoint" });
@@ -17,23 +23,32 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/persons", (req, res) => {
-  res.json(persons).status(200);
+  Person.find({}).then((people) => {
+    res.json(people);
+  });
+  // res.json(persons).status(200);
 });
 
 app.get("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find(person => person.id === id);
-  person
-    ? res.json(person)
-    : res.status(400).json({ error: "entry with that id does not exist" });
+  const id = req.params.id;
+  Person.findById(id)
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((error) => console.log("id not found", error));
+  // const person = persons.find((person) => person.id === id);
+  // person
+  //   ? res.json(person)
+  //   : res.status(400).json({ error: "entry with that id does not exist" });
 });
 
 app.post("/api/persons", (req, res) => {
   const body = req.body;
-  const maxId = Math.max(...persons.map(p => p.id));
+  // const maxId = Math.max(...persons.map((p) => p.id));
+  const newId = Math.random().toString().slice(2);
   if (
     persons.some(
-      person => person.name.toLowerCase() === body.name.toLowerCase()
+      (person) => person.name.toLowerCase() === body.name.toLowerCase()
     )
   ) {
     return res.status(400).json({ error: "name must be unique" });
@@ -45,22 +60,22 @@ app.post("/api/persons", (req, res) => {
   ) {
     return res.status(400).json({ error: "must inlcude name and number" });
   } else {
-    const person = {
-      id: maxId + 1,
+    const person = new Person({
       name: body.name,
-      number: body.number
-    };
-    persons = persons.concat(person);
-    res.json(person);
+      number: body.number,
+    });
+
+    person.save().then((savedPerson) => {
+      console.log("person saved!");
+      res.json(savedPerson);
+    });
   }
 });
 
 app.put("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
+  const id = req.params.id;
   const body = req.body;
-  if (!persons.some(person => person.id === id)) {
-    return res.status(400).json({ error: "id not found" });
-  } else if (
+  if (
     typeof body.name === "undefined" ||
     typeof body.number === "undefined" ||
     body.name.length < 2 ||
@@ -69,20 +84,25 @@ app.put("/api/persons/:id", (req, res) => {
     return res.status(400).json({ error: "must inlcude name and number" });
   } else {
     const person = {
-      id: id,
       name: body.name,
-      number: body.number
+      number: body.number,
     };
-    persons = persons.concat(person);
-    res.json(person);
+    Person.findByIdAndUpdate(id, person, { new: true }).then((result) => {
+      res.json(person);
+      console.log(person);
+      console.log("person updated!");
+    });
   }
 });
 
 app.delete("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  persons = persons.filter(person => person.id !== id);
-
-  res.json({ success: `id = ${id} was deleted` });
+  const id = req.params.id;
+  Person.findByIdAndRemove(id).then((result) =>
+    res
+      .json({ success: `id = ${id} was deleted` })
+      .status(204)
+      .end()
+  );
 });
 
 app.use(unknownEndpoint);

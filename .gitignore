@@ -1,6 +1,7 @@
 yarn.lock
 .vscode
 node_modules
+.env
 
 # dependencies
 #/node_modules
@@ -23,3 +24,7 @@ node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+#mongo
+mongo.js
+
