@@ -7,8 +7,6 @@ const mongoose = require("mongoose");
 const { response } = require("express");
 var persons = [];
 
-// var persons = require("./db.json");
-
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: "unknown endpoint" });
 };
@@ -23,32 +21,45 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/persons", (req, res) => {
-  Person.find({}).then((people) => {
+  Person.find({}).then(people => {
     res.json(people);
   });
-  // res.json(persons).status(200);
 });
 
 app.get("/api/persons/:id", (req, res) => {
   const id = req.params.id;
   Person.findById(id)
-    .then((result) => {
-      res.json(result);
+    .then(result => {
+      if (result) {
+        res.json(result);
+      } else {
+        console.log("id not does not exist on the server");
+        res.status(404).end();
+      }
     })
-    .catch((error) => console.log("id not found", error));
-  // const person = persons.find((person) => person.id === id);
-  // person
-  //   ? res.json(person)
-  //   : res.status(400).json({ error: "entry with that id does not exist" });
+    .catch(error => {
+      console.log(
+        "start of error message **********************************\n",
+        error
+      );
+      console.log(
+        "end   of error message **********************************\n"
+      );
+      res
+        .status(400)
+        .send({ error: "malformed id" })
+        .end();
+    });
 });
 
 app.post("/api/persons", (req, res) => {
   const body = req.body;
-  // const maxId = Math.max(...persons.map((p) => p.id));
-  const newId = Math.random().toString().slice(2);
+  const newId = Math.random()
+    .toString()
+    .slice(2);
   if (
     persons.some(
-      (person) => person.name.toLowerCase() === body.name.toLowerCase()
+      person => person.name.toLowerCase() === body.name.toLowerCase()
     )
   ) {
     return res.status(400).json({ error: "name must be unique" });
@@ -62,10 +73,10 @@ app.post("/api/persons", (req, res) => {
   } else {
     const person = new Person({
       name: body.name,
-      number: body.number,
+      number: body.number
     });
 
-    person.save().then((savedPerson) => {
+    person.save().then(savedPerson => {
       console.log("person saved!");
       res.json(savedPerson);
     });
@@ -85,9 +96,9 @@ app.put("/api/persons/:id", (req, res) => {
   } else {
     const person = {
       name: body.name,
-      number: body.number,
+      number: body.number
     };
-    Person.findByIdAndUpdate(id, person, { new: true }).then((result) => {
+    Person.findByIdAndUpdate(id, person, { new: true }).then(result => {
       res.json(person);
       console.log(person);
       console.log("person updated!");
@@ -97,7 +108,7 @@ app.put("/api/persons/:id", (req, res) => {
 
 app.delete("/api/persons/:id", (req, res) => {
   const id = req.params.id;
-  Person.findByIdAndRemove(id).then((result) =>
+  Person.findByIdAndRemove(id).then(result =>
     res
       .json({ success: `id = ${id} was deleted` })
       .status(204)
